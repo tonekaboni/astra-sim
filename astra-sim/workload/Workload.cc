@@ -70,12 +70,16 @@ void Workload::initialize_comm_group(string comm_group_filename) {
         comm_group = nullptr;
         return;
     }
-
+    //std::cout <<"start of func\n";
     ifstream inFile;
     json j;
     inFile.open(comm_group_filename);
+    //std::stringstream buffer;
+    //buffer << inFile.rdbuf(); // Read the entire file into the stringstream
+    //std::string fileContents = buffer.str();
+    //std::cout <<comm_group_filename<<std::endl;
     inFile >> j;
-
+    //std::cout <<"start of loop\n";
     for (json::iterator it = j.begin(); it != j.end(); ++it) {
         bool in_comm_group = false;
 
@@ -196,7 +200,7 @@ void Workload::issue_remote_mem(shared_ptr<Chakra::ETFeederNode> node) {
 
 void Workload::issue_comp(shared_ptr<Chakra::ETFeederNode> node) {
     hw_resource->occupy(node);
-
+    std::cout<<"time: "<<sys->sys_sim_time()<<" COMP_TASK"<<" npu_id: "<< sys->id<<"\n";
     if (sys->roofline_enabled) {
         WorkloadLayerHandlerData* wlhd = new WorkloadLayerHandlerData;
         wlhd->node_id = node->id();
@@ -213,6 +217,7 @@ void Workload::issue_comp(shared_ptr<Chakra::ETFeederNode> node) {
         } else {
             hw_resource->tics_gpu_ops += runtime;
         }
+        
         sys->register_event(this, EventType::General, wlhd, runtime);
     } else {
         // advance this node forward the recorded "replayed" time specificed in
@@ -223,7 +228,7 @@ void Workload::issue_comp(shared_ptr<Chakra::ETFeederNode> node) {
 
 void Workload::issue_comm(shared_ptr<Chakra::ETFeederNode> node) {
     hw_resource->occupy(node);
-
+    
     vector<bool> involved_dim;
 
     if (node->has_other_attr("involved_dim")) {
@@ -253,10 +258,12 @@ void Workload::issue_comm(shared_ptr<Chakra::ETFeederNode> node) {
 	for(int i = 0; i < 4; i++)
             involved_dim.push_back(true);
     }
-
+    //std::cout<<"time: "<<sys->sys_sim_time()<<" COMM_TASK"<<" npu_id: "<< sys->id<< " COMMTYPE: ";
     if (!node->is_cpu_op() &&
         (node->type() == ChakraNodeType::COMM_COLL_NODE)) {
         if (node->comm_type() == ChakraCollectiveCommType::ALL_REDUCE) {
+            //std::cout<<"ALL_REDUCE\n";
+            std::cout<<"time: "<<sys->sys_sim_time()<<" ALL_REDUCE "<<" npu_id: "<< sys->id<<"\n";
             DataSet* fp =
                 sys->generate_all_reduce(node->comm_size(), involved_dim,
                                          comm_group, node->comm_priority());
@@ -265,6 +272,7 @@ void Workload::issue_comm(shared_ptr<Chakra::ETFeederNode> node) {
             fp->set_notifier(this, EventType::CollectiveCommunicationFinished);
 
         } else if (node->comm_type() == ChakraCollectiveCommType::ALL_TO_ALL) {
+            //std::cout<<"ALL_TO_ALL\n";
             DataSet* fp =
                 sys->generate_all_to_all(node->comm_size(), involved_dim,
                                          comm_group, node->comm_priority());
@@ -351,6 +359,7 @@ void Workload::call(EventType event, CallData* data) {
     }
 
     if (event == EventType::CollectiveCommunicationFinished) {
+        std::cout<<"time: "<<sys->sys_sim_time()<<" CollectiveCommunicationFinished "<<" npu_id: "<< sys->id<<"\n";
         IntData* int_data = (IntData*)data;
         hw_resource->tics_gpu_comms += int_data->execution_time;
         uint64_t node_id = collective_comm_node_id_map[int_data->data];
@@ -385,7 +394,9 @@ void Workload::call(EventType event, CallData* data) {
             shared_ptr<Chakra::ETFeederNode> node =
                 et_feeder->lookupNode(wlhd->node_id);
 
+            
             if (sys->trace_enabled) {
+                
                 LoggerFactory::get_logger("workload")
                     ->debug("callback,sys->id={}, tick={}, node->id={}, "
                             "node->name={}, node->type={}",

@@ -1,4 +1,15 @@
 import os
+import sys
+
+# Get the directory of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the relative path
+relative_path = os.path.join(current_dir, '../../../../extern/graph_frontend')
+
+# Add the relative path to sys.path
+sys.path.append(relative_path)
+
 
 from chakra.third_party.utils.protolib import encodeMessage as encode_message
 from chakra.et_def.et_def_pb2 import (

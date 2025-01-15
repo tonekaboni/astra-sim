@@ -40,6 +40,33 @@ namespace AstraSim {
 uint8_t* Sys::dummy_data = new uint8_t[2];
 vector<Sys*> Sys::all_sys;
 
+std::string toString(EventType eventType) {
+    switch (eventType) {
+        case EventType::CallEvents: return "CallEvents";
+        case EventType::General: return "General";
+        case EventType::RendezvousSend: return "RendezvousSend";
+        case EventType::RendezvousRecv: return "RendezvousRecv";
+        case EventType::PacketReceived: return "PacketReceived";
+        case EventType::PacketSent: return "PacketSent";
+        case EventType::Rec_Finished: return "Rec_Finished";
+        case EventType::Send_Finished: return "Send_Finished";
+        case EventType::Processing_Finished: return "Processing_Finished";
+        case EventType::NPU_to_MA: return "NPU_to_MA";
+        case EventType::MA_to_NPU: return "MA_to_NPU";
+        case EventType::Consider_Process: return "Consider_Process";
+        case EventType::Consider_Retire: return "Consider_Retire";
+        case EventType::Consider_Send_Back: return "Consider_Send_Back";
+        case EventType::StreamInit: return "StreamInit";
+        case EventType::CommProcessingFinished: return "CommProcessingFinished";
+        case EventType::CollectiveCommunicationFinished: return "CollectiveCommunicationFinished";
+        case EventType::CompFinished: return "CompFinished";
+        case EventType::MemLoadFinished: return "MemLoadFinished";
+        case EventType::MemStoreFinished: return "MemStoreFinished";
+        
+    }
+}
+
+
 // SchedulerUnit --------------------------------------------------------------
 Sys::SchedulerUnit::SchedulerUnit(Sys* sys,
                                   vector<int> queues,
@@ -482,6 +509,7 @@ bool Sys::initialize_sys(string name) {
     this->trace_enabled = false;
     if (j.contains("trace-enabled")) {
         if (j["trace-enabled"] != 0) {
+            
             this->trace_enabled = true;
         } else {
             this->trace_enabled = false;
@@ -538,6 +566,10 @@ CollectiveImpl* Sys::generate_collective_impl_from_chakra(
     return new ChakraCollectiveImpl(CollectiveImplType::ChakraImpl, filename);
 }
 
+int Sys::sys_sim_time(){
+    return this->comm_NI->sim_get_time().time_val;
+}
+
 Tick Sys::boostedTick() {
     Sys* ts = all_sys[0];
     if (ts == nullptr) {
@@ -569,6 +601,20 @@ void Sys::call(EventType type, CallData* data) {}
 void Sys::call_events() {
     for (auto& callable : event_queue[Sys::boostedTick()]) {
         try {
+                
+            Sys* ts = all_sys[0];
+            //std::cout <<"time: "<< ts->comm_NI->sim_get_time().time_val << " Call_event for : "<< toString(get<1>(callable)) <<"\n";
+            if (ts == nullptr) {
+                for (uint64_t i = 1; i < all_sys.size(); i++) {
+                    if (all_sys[i] != nullptr) {
+                        ts = all_sys[i];
+                        break;
+                    }
+                }
+            }
+            
+            
+           
             pending_events--;
             (get<0>(callable))->call(get<1>(callable), get<2>(callable));
         } catch (const std::exception& e) {
@@ -616,6 +662,9 @@ void Sys::try_register_event(Callable* callable,
     return;
 }
 
+
+
+
 void Sys::handleEvent(void* arg) {
     if (arg == nullptr) {
         return;
@@ -624,6 +673,20 @@ void Sys::handleEvent(void* arg) {
     int id = ehd->sys_id;
     EventType event = ehd->event;
 
+    
+    Sys* ts = all_sys[0];
+    //std::cout <<"time: "<< ts->comm_NI->sim_get_time().time_val<<" sys_id: "<< id << " event: "<< toString(event) <<"\n";
+    if (ts == nullptr) {
+        for (uint64_t i = 1; i < all_sys.size(); i++) {
+            if (all_sys[i] != nullptr) {
+                ts = all_sys[i];
+                break;
+            }
+        }
+    }
+    
+
+    
     if (event == EventType::CallEvents) {
         all_sys[id]->call_events();
         delete ehd;
@@ -664,6 +727,7 @@ void Sys::handleEvent(void* arg) {
         delete sehd;
     }
 }
+
 
 LogicalTopology* Sys::get_logical_topology(ComType comm_type) {
     if (comm_type == ComType::All_Reduce) {

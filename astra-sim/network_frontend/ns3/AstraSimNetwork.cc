@@ -9,6 +9,10 @@
 #include "ns3/csma-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/network-module.h"
+
+#include "ns3/flow-monitor.h"
+#include "ns3/flow-monitor-helper.h"
+
 #include <execinfo.h>
 #include <fstream>
 #include <iostream>
@@ -18,7 +22,7 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
-
+#include "astra-sim/common/Logging.hh"
 using namespace std;
 using namespace ns3;
 using json = nlohmann::json;
@@ -48,6 +52,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     double sim_time_resolution() {
         return 0;
     }
+
 
     void handleEvent(int dst, int cnt) {}
 
@@ -144,6 +149,7 @@ string network_configuration;
 string memory_configuration;
 string comm_group_configuration;
 string logical_topology_configuration;
+string logging_configuration = "empty";
 int num_queues_per_dim = 1;
 double comm_scale = 1;
 double injection_scale = 1;
@@ -200,6 +206,9 @@ void parse_args(int argc, char* argv[]) {
     cmd.AddValue("logical-topology-configuration",
                  "Logical topology configuration file",
                  logical_topology_configuration);
+    cmd.AddValue("logging-configuration",
+                 "Logging configuration file", 
+                 logging_configuration);
 
     cmd.AddValue("num-queues-per-dim", "Number of queues per each dimension",
                  num_queues_per_dim);
@@ -214,11 +223,12 @@ void parse_args(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
     LogComponentEnable("OnOffApplication", LOG_LEVEL_INFO);
     LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
-
+    //LogComponentEnable("AstraSimNetwork", LOG_LEVEL_ALL);
     cout << "ASTRA-sim + NS3" << endl;
 
     // Read network config and find logical dims.
-    parse_args(argc, argv);
+     parse_args(argc, argv);
+    //AstraSim::LoggerFactory::init(logging_configuration);
     read_logical_topo_config(logical_topology_configuration, logical_dims);
 
     // Setup network & System layer.
@@ -247,8 +257,21 @@ int main(int argc, char* argv[]) {
     }
 
     // Run the simulation by triggering the ns3 event queue.
+   // Ptr<FlowMonitor> flowMonitor;
+    //FlowMonitorHelper flowHelper;
+    //flowMonitor = flowHelper.InstallAll();
+    //std::cout << "Welcome to GFG";
+    //NS_LOG_INFO("This is an informational message.");
+
+
+    Simulator::Stop(Seconds(1));
     Simulator::Run();
-    Simulator::Stop(Seconds(2000000000));
+    
+    //cout << "Welcome to GFG";
+    
+    //flowMonitor->SerializeToXmlFile("./monitor-output.xml", true, true);
+    NS_LOG_UNCOND("This log is unconditional and should always print.");
+    //flowMonitor->SerializeToXmlFile("monitor_output.xml", true, true);
     Simulator::Destroy();
     return 0;
 }

@@ -5,8 +5,9 @@ SCRIPT_DIR=$(dirname "$(realpath $0)")
 ASTRA_SIM_DIR="${SCRIPT_DIR:?}"/../../astra-sim
 NS3_DIR="${SCRIPT_DIR:?}"/../../extern/network_backend/ns-3
 # Inputs - change as necessary.
-WORKLOAD="${SCRIPT_DIR:?}"/../../extern/graph_frontend/chakra/one_comm_coll_node_allgather
+WORKLOAD="${SCRIPT_DIR:?}"/../../extern/graph_frontend/chakra/src/generator/mixed_flex
 SYSTEM="${SCRIPT_DIR:?}"/../../inputs/system/Switch.json
+COMM_COLL="${SCRIPT_DIR:?}"/../../inputs/workload/comm_collective.json
 MEMORY="${SCRIPT_DIR:?}"/../../inputs/remote_memory/analytical/no_memory_expansion.json
 LOGICAL_TOPOLOGY="${SCRIPT_DIR:?}"/../../inputs/network/ns3/sample_8nodes_1D.json
 # Note that ONLY this file is relative to NS3_DIR/simulation
@@ -31,7 +32,7 @@ function run {
         --network-configuration=${NETWORK} \
         --remote-memory-configuration=${MEMORY} \
         --logical-topology-configuration=${LOGICAL_TOPOLOGY} \
-        --comm-group-configuration=\"empty\"
+        --comm-group-configuration=${COMM_COLL} \
     cd "${SCRIPT_DIR:?}"
 }
 function cleanup {

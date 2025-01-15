@@ -1,5 +1,5 @@
 #include "astra-sim/common/Logging.hh"
-
+#include <iostream>
 namespace AstraSim {
 
 std::unordered_set<spdlog::sink_ptr> LoggerFactory::default_sinks;
@@ -27,6 +27,7 @@ std::shared_ptr<spdlog::logger> LoggerFactory::get_logger(
 }
 
 void LoggerFactory::init(const std::string& log_config_path) {
+    //std::cout<< " &&&&&&&&&&&&&& " << log_config_path << std::endl;
     if (log_config_path != "empty") {
         spdlog_setup::from_file(log_config_path);
     }

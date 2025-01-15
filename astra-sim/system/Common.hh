@@ -129,6 +129,7 @@ enum class EventType {
     MemStoreFinished
 };
 
+
 class CloneInterface {
   public:
     virtual CloneInterface* clone() const = 0;

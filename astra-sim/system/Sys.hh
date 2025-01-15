@@ -87,6 +87,7 @@ class Sys : public Callable {
 
     // Helper Functions
     // ---------------------------------------------------------
+    int sys_sim_time();
     static Tick boostedTick();
     static void sys_panic(std::string msg);
     //---------------------------------------------------------------------------
