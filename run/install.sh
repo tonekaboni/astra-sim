@@ -17,15 +17,11 @@ cd "${PROJECT_DIR:?}"/extern/graph_frontend/chakra
 git clone https://github.com/facebookresearch/param.git
 cd param/et_replay
 git checkout 7b19f586dd8b267333114992833a0d7e0d601630
-pip3 install .
 
 
 
-# install Chakra
-echo ""
-echo "[ASTRA-sim] Installing Chakra..."
-echo ""
-pip3 install "${CHAKRA_DIR:?}"
+
+
 
 # done
 echo ""
