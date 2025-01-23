@@ -5,7 +5,7 @@ SCRIPT_DIR=$(dirname "$(realpath $0)")
 ASTRA_SIM_DIR="${SCRIPT_DIR:?}"/../../astra-sim
 NS3_DIR="${SCRIPT_DIR:?}"/../../extern/network_backend/ns-3
 # Inputs - change as necessary.
-WORKLOAD="${SCRIPT_DIR:?}"/../../extern/graph_frontend/chakra/src/generator/mixed_flex
+WORKLOAD="${SCRIPT_DIR:?}"/../../run/workload/mixed_flex
 SYSTEM="${SCRIPT_DIR:?}"/../../inputs/system/Switch.json
 COMM_COLL="${SCRIPT_DIR:?}"/../../inputs/workload/comm_collective.json
 MEMORY="${SCRIPT_DIR:?}"/../../inputs/remote_memory/analytical/no_memory_expansion.json
@@ -15,8 +15,8 @@ NETWORK="../../../ns-3/scratch/config/config.txt"
 # Functions
 function setup {
     protoc et_def.proto\
-        --proto_path ${SCRIPT_DIR}/../../extern/graph_frontend/chakra/et_def/\
-        --cpp_out ${SCRIPT_DIR}/../../extern/graph_frontend/chakra/et_def/
+        --proto_path ${SCRIPT_DIR}/../../extern/graph_frontend/chakra/schema/protobuf/\
+        --cpp_out ${SCRIPT_DIR}/../../extern/graph_frontend/chakra/schema/protobuf/
 }
 function compile {
     cd "${NS3_DIR}"
@@ -32,7 +32,7 @@ function run {
         --network-configuration=${NETWORK} \
         --remote-memory-configuration=${MEMORY} \
         --logical-topology-configuration=${LOGICAL_TOPOLOGY} \
-        --comm-group-configuration=${COMM_COLL} \
+        --comm-group-configuration=${COMM_COLL} 
     cd "${SCRIPT_DIR:?}"
 }
 function cleanup {
@@ -54,7 +54,7 @@ function debug {
         --network-configuration=${NETWORK} \
         --remote-memory-configuration=${MEMORY} \
         --logical-topology-configuration=${LOGICAL_TOPOLOGY} \
-        --comm-group-configuration=\"empty\"
+        --comm-group-configuration=${COMM_COLL} 
 }
 function special_debug {
     cd "${NS3_DIR}/build/scratch"
@@ -64,7 +64,7 @@ function special_debug {
         --network-configuration=${NETWORK} \
         --remote-memory-configuration=${MEMORY} \
         --logical-topology-configuration=${LOGICAL_TOPOLOGY} \
-        --comm-group-configuration=\"empty\"
+        --comm-group-configuration=${COMM_COLL} 
 }
 # Main Script
 case "$1" in
